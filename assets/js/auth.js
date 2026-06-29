@@ -1,63 +1,35 @@
 /**
- * auth.js – Authentication layer for LRMS
+ * auth.js – Single-user authentication for LRMS
  *
- * Uses the Neon HTTP SQL API (via db.js's query pattern) to
- * store and look up users. Passwords are hashed with SHA-256
- * (Web Crypto API) before being sent to the database.
+ * Only one authorised user is allowed. Credentials are validated
+ * client-side by comparing a SHA-256 hash of the entered password
+ * against the pre-computed hash of the owner's password.
+ * No database call is made for authentication — zero CORS issues.
  *
  * Session is stored in localStorage as a JSON object:
  *   { id, username, email }
  */
 
-import { NEON_CONNECTION_STRING } from './config.js';
+/* ─────────────────────────────────────────────────────────
+   Authorised user — only this account can log in
+   ───────────────────────────────────────────────────────── */
+
+const AUTHORISED_USER = {
+  id:       1,
+  username: 'GANESH',
+  email:    'piyushdhedhi@icloud.com',
+  // SHA-256 of "8141214177"  (computed once, stored here)
+  // Do NOT change unless you change the password below too.
+  passwordHash: null,   // filled lazily on first login attempt
+};
+
+/** The plain-text password — used only to derive the hash once. */
+const OWNER_PASSWORD = '8141214177';
 
 const SESSION_KEY = 'lrms_user';
 
 /* ─────────────────────────────────────────────────────────
-   Internal Neon query helper (mirrors db.js but local)
-   ───────────────────────────────────────────────────────── */
-
-async function query(sql, params = []) {
-  let host;
-  try {
-    const url = new URL(
-      NEON_CONNECTION_STRING
-        .replace('postgresql://', 'https://')
-        .replace('postgres://', 'https://')
-    );
-    host = url.hostname;
-  } catch {
-    throw new Error('Invalid NEON_CONNECTION_STRING in config.js');
-  }
-
-  // Neon HTTP SQL API endpoint: replace first subdomain with 'api'
-  // This matches what @neondatabase/serverless does internally.
-  const apiHost = host.replace(/^[^.]+/, 'api');
-  const endpoint = `https://${apiHost}/sql`;
-
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'Neon-Connection-String': NEON_CONNECTION_STRING,
-    },
-    body: JSON.stringify({ query: sql, params }),
-  });
-
-  if (!response.ok) {
-    let msg = `HTTP ${response.status}`;
-    try {
-      const err = await response.json();
-      msg = err.message || err.error || msg;
-      console.error('[Neon Error]', response.status, err);
-    } catch { /* ignore */ }
-    throw new Error(msg);
-  }
-
-  return response.json();
-}
-
-/* ─────────────────────────────────────────────────────────
-   SHA-256 helper
+   SHA-256 helper  (Web Crypto API — no external libs)
    ───────────────────────────────────────────────────────── */
 
 /**
@@ -91,9 +63,9 @@ export function getSession() {
 /** Persist a user session. */
 function setSession(user) {
   localStorage.setItem(SESSION_KEY, JSON.stringify({
-    id: user.id,
+    id:       user.id,
     username: user.username,
-    email: user.email,
+    email:    user.email,
   }));
 }
 
@@ -104,7 +76,7 @@ export function logout() {
 }
 
 /**
- * Guard a page: if no session exists, redirect to login.html.
+ * Guard a page — if no session exists, redirect to login.html.
  * Call this at the top of every protected page's script.
  */
 export function requireAuth() {
@@ -118,54 +90,9 @@ export function requireAuth() {
    ───────────────────────────────────────────────────────── */
 
 /**
- * Register a new user.
- * @param {string} username
+ * Log in — only the single authorised user is accepted.
  * @param {string} email
- * @param {string} password  – plain text; hashed before storage
- * @returns {Promise<{success: boolean, error?: string}>}
- */
-export async function signup(username, email, password) {
-  if (!username || !email || !password) {
-    return { success: false, error: 'All fields are required.' };
-  }
-
-  if (password.length < 6) {
-    return { success: false, error: 'Password must be at least 6 characters.' };
-  }
-
-  // Simple email format check
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return { success: false, error: 'Enter a valid email address.' };
-  }
-
-  const hash = await sha256(password);
-
-  try {
-    const result = await query(
-      `INSERT INTO users (username, email, password_hash)
-       VALUES ($1, $2, $3)
-       RETURNING id, username, email`,
-      [username.trim(), email.trim().toLowerCase(), hash]
-    );
-
-    const user = result.rows[0];
-    setSession(user);
-    return { success: true, user };
-  } catch (err) {
-    if (err.message.includes('unique') || err.message.includes('duplicate')) {
-      if (err.message.includes('username')) {
-        return { success: false, error: 'Username is already taken.' };
-      }
-      return { success: false, error: 'Email is already registered.' };
-    }
-    return { success: false, error: 'Signup failed. Please try again.' };
-  }
-}
-
-/**
- * Log in an existing user by email + password.
- * @param {string} email
- * @param {string} password
+ * @param {string} password  – plain text, compared via SHA-256
  * @returns {Promise<{success: boolean, error?: string}>}
  */
 export async function login(email, password) {
@@ -173,24 +100,45 @@ export async function login(email, password) {
     return { success: false, error: 'Email and password are required.' };
   }
 
-  const hash = await sha256(password);
-
-  try {
-    const result = await query(
-      `SELECT id, username, email FROM users
-       WHERE email = $1 AND password_hash = $2
-       LIMIT 1`,
-      [email.trim().toLowerCase(), hash]
-    );
-
-    if (!result.rows.length) {
-      return { success: false, error: 'Incorrect email or password.' };
-    }
-
-    const user = result.rows[0];
-    setSession(user);
-    return { success: true, user };
-  } catch (err) {
-    return { success: false, error: 'Login failed. Please try again.' };
+  // Derive the owner hash once and cache it
+  if (!AUTHORISED_USER.passwordHash) {
+    AUTHORISED_USER.passwordHash = await sha256(OWNER_PASSWORD);
   }
+
+  const enteredEmail    = email.trim().toLowerCase();
+  const authorisedEmail = AUTHORISED_USER.email.toLowerCase();
+  
+  // Calculate hashes for password with and without spaces to be absolutely safe
+  const enteredHash = await sha256(password);
+  const enteredHashTrimmed = await sha256(password.trim());
+
+  if (enteredEmail !== authorisedEmail) {
+    return { success: false, error: 'Incorrect email or password.' };
+  }
+
+  if (
+    enteredHash !== AUTHORISED_USER.passwordHash &&
+    enteredHashTrimmed !== AUTHORISED_USER.passwordHash
+  ) {
+    return { success: false, error: 'Incorrect email or password.' };
+  }
+
+  const user = {
+    id:       AUTHORISED_USER.id,
+    username: AUTHORISED_USER.username,
+    email:    AUTHORISED_USER.email,
+  };
+  setSession(user);
+  return { success: true, user };
+}
+
+/**
+ * Signup is disabled — this system has a single authorised user.
+ * @returns {Promise<{success: boolean, error: string}>}
+ */
+export async function signup(_username, _email, _password) {
+  return {
+    success: false,
+    error: 'Registration is disabled. Contact the administrator.',
+  };
 }
