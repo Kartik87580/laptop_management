@@ -269,20 +269,17 @@
       </div>
     </div>
 
-    <!-- Tabs -->
+    <!-- Tabs: Sign In only (registration is disabled) -->
     <div class="auth-tabs">
-      <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">
+      <button class="auth-tab active" id="tabLogin">
         <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
-      </button>
-      <button class="auth-tab" id="tabSignup" onclick="switchTab('signup')">
-        <i class="bi bi-person-plus me-1"></i> Sign Up
       </button>
     </div>
 
     <!-- ── LOGIN PANEL ── -->
     <div class="auth-panel active" id="panelLogin">
-      <h1 class="auth-title">Welcome back</h1>
-      <p class="auth-sub">Enter your credentials to continue.</p>
+      <h1 class="auth-title">Welcome back, Ganesh</h1>
+      <p class="auth-sub">Private access — authorised personnel only.</p>
 
       <div class="auth-error" id="loginError">
         <i class="bi bi-exclamation-circle-fill"></i>
@@ -313,79 +310,15 @@
         </button>
       </form>
 
-      <p class="auth-divider">Don't have an account? <a href="#" onclick="switchTab('signup'); return false;" style="color:#60a5fa;">Sign Up</a></p>
-    </div>
-
-    <!-- ── SIGNUP PANEL ── -->
-    <div class="auth-panel" id="panelSignup">
-      <h1 class="auth-title">Create account</h1>
-      <p class="auth-sub">Get started — it's free.</p>
-
-      <div class="auth-error" id="signupError">
-        <i class="bi bi-exclamation-circle-fill"></i>
-        <span id="signupErrorMsg"></span>
-      </div>
-
-      <div id="signupFormWrap">
-        <form id="signupForm" novalidate>
-          <div class="field-group">
-            <label for="signupUsername">Username</label>
-            <div class="field-wrap">
-              <i class="bi bi-person"></i>
-              <input type="text" id="signupUsername" class="auth-input" placeholder="e.g. karthik" autocomplete="username" required maxlength="50" />
-            </div>
-          </div>
-          <div class="field-group">
-            <label for="signupEmail">Email Address</label>
-            <div class="field-wrap">
-              <i class="bi bi-envelope"></i>
-              <input type="email" id="signupEmail" class="auth-input" placeholder="you@example.com" autocomplete="email" required />
-            </div>
-          </div>
-          <div class="field-group">
-            <label for="signupPassword">Password <span style="color:#475569;font-weight:400">(min. 6 chars)</span></label>
-            <div class="field-wrap">
-              <i class="bi bi-lock"></i>
-              <input type="password" id="signupPassword" class="auth-input has-toggle" placeholder="••••••••" autocomplete="new-password" required minlength="6" />
-              <button type="button" class="pw-toggle" onclick="togglePw('signupPassword', this)" tabindex="-1">
-                <i class="bi bi-eye"></i>
-              </button>
-            </div>
-          </div>
-          <button type="submit" class="auth-btn" id="signupBtn">
-            <span class="btn-spinner"></span>
-            <span class="btn-label"><i class="bi bi-person-plus"></i> Create Account</span>
-          </button>
-        </form>
-      </div>
-
-      <!-- Success state shown after signup -->
-      <div class="auth-success" id="signupSuccess">
-        <div class="success-icon"><i class="bi bi-check-lg"></i></div>
-        <div class="success-title">Account created!</div>
-        <div class="success-sub">Redirecting to the dashboard…</div>
-      </div>
-
-      <p class="auth-divider" id="signupSwitchHint">Already have an account? <a href="#" onclick="switchTab('login'); return false;" style="color:#60a5fa;">Sign In</a></p>
     </div>
 
   </div><!-- /auth-card -->
 
   <script type="module">
-    import { login, signup, getSession } from './assets/js/auth.js';
+    import { login, getSession } from './assets/js/auth.js';
 
     // Redirect if already logged in
     if (getSession()) window.location.replace('index.html');
-
-    /* ──── Tab switching ──── */
-    window.switchTab = function(tab) {
-      document.getElementById('panelLogin').classList.toggle('active',  tab === 'login');
-      document.getElementById('panelSignup').classList.toggle('active', tab === 'signup');
-      document.getElementById('tabLogin').classList.toggle('active',  tab === 'login');
-      document.getElementById('tabSignup').classList.toggle('active', tab === 'signup');
-      hideError('login');
-      hideError('signup');
-    };
 
     /* ──── Password toggle ──── */
     window.togglePw = function(inputId, btn) {
@@ -396,13 +329,12 @@
     };
 
     /* ──── Error helpers ──── */
-    function showError(form, msg) {
-      document.getElementById(`${form}Error`).classList.add('visible');
-      document.getElementById(`${form}ErrorMsg`).textContent = msg;
+    function showError(msg) {
+      document.getElementById('loginError').classList.add('visible');
+      document.getElementById('loginErrorMsg').textContent = msg;
     }
-    function hideError(form) {
-      const el = document.getElementById(`${form}Error`);
-      if (el) el.classList.remove('visible');
+    function hideError() {
+      document.getElementById('loginError').classList.remove('visible');
     }
 
     /* ──── Button loading state ──── */
@@ -414,7 +346,7 @@
     /* ──── Login ──── */
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      hideError('login');
+      hideError();
       const btn   = document.getElementById('loginBtn');
       const email = document.getElementById('loginEmail').value;
       const pw    = document.getElementById('loginPassword').value;
@@ -427,7 +359,7 @@
         btn.innerHTML = '<i class="bi bi-check-lg"></i> <span class="btn-label">Success!</span>';
         setTimeout(() => window.location.href = 'index.html', 600);
       } else {
-        showError('login', result.error);
+        showError(result.error);
         document.getElementById('loginPassword').classList.add('is-invalid');
       }
     });
@@ -436,29 +368,6 @@
     document.getElementById('loginPassword').addEventListener('input', () =>
       document.getElementById('loginPassword').classList.remove('is-invalid')
     );
-
-    /* ──── Signup ──── */
-    document.getElementById('signupForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      hideError('signup');
-      const btn      = document.getElementById('signupBtn');
-      const username = document.getElementById('signupUsername').value;
-      const email    = document.getElementById('signupEmail').value;
-      const pw       = document.getElementById('signupPassword').value;
-
-      setLoading(btn, true);
-      const result = await signup(username, email, pw);
-      setLoading(btn, false);
-
-      if (result.success) {
-        document.getElementById('signupFormWrap').style.display = 'none';
-        document.getElementById('signupSwitchHint').style.display = 'none';
-        document.getElementById('signupSuccess').classList.add('visible');
-        setTimeout(() => window.location.href = 'index.html', 1800);
-      } else {
-        showError('signup', result.error);
-      }
-    });
   </script>
 
 </body>
