@@ -48,6 +48,7 @@ async function query(sql, params = []) {
   const response = await fetch(endpoint, {
     method: 'POST',
     headers: {
+      'Content-Type': 'application/json',
       'Neon-Connection-String': NEON_CONNECTION_STRING,
     },
     body: JSON.stringify({ query: sql, params }),
