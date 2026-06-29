@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Environment / Credentials
+assets/js/config.js
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+*.swp
+*.swo
+
+# Vercel
+.vercel/

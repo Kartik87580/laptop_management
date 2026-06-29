@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>All Repairs – LRMS</title>
+  <meta name="description" content="View, search, filter and manage all laptop repair records." />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+<div class="layout-wrapper">
+
+  <!-- ═══════════ SIDEBAR ═══════════ -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon"><i class="bi bi-laptop"></i></div>
+      <div>
+        <div class="brand-text">LRMS</div>
+        <div class="brand-sub">Repair Management</div>
+      </div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <a href="index.html"      class="nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      <a href="repairs.html"    class="nav-link"><i class="bi bi-list-ul"></i> All Repairs</a>
+      <a href="add-repair.html" class="nav-link"><i class="bi bi-plus-circle"></i> Add Repair</a>
+    </div>
+    <div class="sidebar-footer">&copy; 2026 LRMS &nbsp;·&nbsp; v1.0</div>
+  </nav>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- ═══════════ MAIN ═══════════ -->
+  <div class="main-content">
+    <div class="topbar">
+      <button class="sidebar-toggle" id="sidebarToggle"><i class="bi bi-list"></i></button>
+      <span class="page-title">All Repairs</span>
+      <div class="topbar-right">
+        <a href="add-repair.html" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> New Repair</a>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <div class="card">
+        <!-- Filter Bar -->
+        <div class="card-header flex-wrap gap-2">
+          <h2 class="card-title"><i class="bi bi-list-ul me-2"></i>Repair Records</h2>
+          <div class="filter-bar ms-auto">
+            <input type="search" id="searchInput" class="form-control" placeholder="Search job, name, phone, brand…" />
+            <select id="statusFilter" class="form-select">
+              <option value="">All Statuses</option>
+              <option>Received</option>
+              <option>Diagnosing</option>
+              <option>Waiting for Parts</option>
+              <option>Repairing</option>
+              <option>Ready</option>
+              <option>Delivered</option>
+            </select>
+            <button id="searchBtn" class="btn btn-primary btn-sm"><i class="bi bi-search"></i></button>
+            <button id="clearBtn"  class="btn btn-outline-secondary btn-sm"><i class="bi bi-x-lg"></i></button>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="lrms-table">
+              <thead>
+                <tr>
+                  <th>Job ID</th>
+                  <th>Customer Name</th>
+                  <th>Phone</th>
+                  <th>Brand</th>
+                  <th>Model</th>
+                  <th>Status</th>
+                  <th>Est. Amount</th>
+                  <th>Received Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="repairsTableBody">
+                <tr><td colspan="9" class="text-center py-4">
+                  <div class="spinner-border spinner-border-sm text-secondary"></div>
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card-header border-top border-bottom-0 d-flex justify-content-between align-items-center">
+          <small class="text-muted" id="recordCount">Loading…</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteModalLabel"><i class="bi bi-trash text-danger me-2"></i>Delete Repair</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete <strong id="deleteJobId"></strong>?</p>
+        <p class="text-muted small">This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+  import { initSidebar, setActiveNav, statusBadge, formatDate, escapeHtml, showToast, emptyStateHtml } from './assets/js/ui.js';
+  import { getAllRepairs, deleteRepair } from './assets/js/db.js';
+
+  let deleteModal, deleteId = null;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    initSidebar();
+    setActiveNav();
+    deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    loadRepairs();
+
+    document.getElementById('searchBtn').addEventListener('click', loadRepairs);
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('statusFilter').value = '';
+      loadRepairs();
+    });
+    document.getElementById('searchInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') loadRepairs();
+    });
+    document.getElementById('statusFilter').addEventListener('change', loadRepairs);
+
+    document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+      if (!deleteId) return;
+      try {
+        await deleteRepair(deleteId);
+        deleteModal.hide();
+        showToast('Repair deleted successfully.', 'success');
+        loadRepairs();
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to delete repair.', 'error');
+      }
+    });
+  });
+
+  async function loadRepairs() {
+    const search = document.getElementById('searchInput').value.trim();
+    const status = document.getElementById('statusFilter').value;
+    const tbody  = document.getElementById('repairsTableBody');
+    tbody.innerHTML = `<tr><td colspan="9" class="text-center py-4"><div class="spinner-border spinner-border-sm text-secondary"></div></td></tr>`;
+
+    try {
+      const rows = await getAllRepairs(status, search);
+      document.getElementById('recordCount').textContent = `${rows.length} record${rows.length !== 1 ? 's' : ''} found`;
+      renderTable(rows);
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to load repairs.', 'error');
+      tbody.innerHTML = `<tr><td colspan="9">${emptyStateHtml('Database error. Check config.js.')}</td></tr>`;
+    }
+  }
+
+  function renderTable(rows) {
+    const tbody = document.getElementById('repairsTableBody');
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="9">${emptyStateHtml('No repairs found.')}</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td><span class="job-id">${escapeHtml(r.job_id)}</span></td>
+        <td>${escapeHtml(r.customer_name)}</td>
+        <td>${escapeHtml(r.phone)}</td>
+        <td>${escapeHtml(r.brand)}</td>
+        <td>${escapeHtml(r.model)}</td>
+        <td>${statusBadge(r.status)}</td>
+        <td>₹${parseFloat(r.estimated_amount || 0).toLocaleString('en-IN')}</td>
+        <td>${formatDate(r.received_date)}</td>
+        <td>
+          <div class="action-btns">
+            <a href="repair-details.html?id=${r.id}" class="btn btn-outline-primary btn-sm" title="View"><i class="bi bi-eye"></i></a>
+            <a href="edit-repair.html?id=${r.id}"    class="btn btn-outline-secondary btn-sm" title="Edit"><i class="bi bi-pencil"></i></a>
+            <button class="btn btn-outline-danger btn-sm delete-btn" data-id="${r.id}" data-job="${escapeHtml(r.job_id)}" title="Delete"><i class="bi bi-trash"></i></button>
+          </div>
+        </td>
+      </tr>`).join('');
+
+    // Attach delete listeners
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        deleteId = btn.dataset.id;
+        document.getElementById('deleteJobId').textContent = btn.dataset.job;
+        deleteModal.show();
+      });
+    });
+  }
+</script>
+</body>
+</html>

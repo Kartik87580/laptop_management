@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Repair Details – LRMS</title>
+  <meta name="description" content="View complete details of a laptop repair job." />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <style>
+    /* Extra detail-page styles */
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+  </style>
+</head>
+<body>
+<div class="layout-wrapper">
+
+  <!-- ═══════════ SIDEBAR ═══════════ -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon"><i class="bi bi-laptop"></i></div>
+      <div>
+        <div class="brand-text">LRMS</div>
+        <div class="brand-sub">Repair Management</div>
+      </div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <a href="index.html"      class="nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      <a href="repairs.html"    class="nav-link"><i class="bi bi-list-ul"></i> All Repairs</a>
+      <a href="add-repair.html" class="nav-link"><i class="bi bi-plus-circle"></i> Add Repair</a>
+    </div>
+    <div class="sidebar-footer">&copy; 2026 LRMS &nbsp;·&nbsp; v1.0</div>
+  </nav>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- ═══════════ MAIN ═══════════ -->
+  <div class="main-content">
+    <div class="topbar">
+      <button class="sidebar-toggle" id="sidebarToggle"><i class="bi bi-list"></i></button>
+      <span class="page-title" id="pageTitle">Repair Details</span>
+      <div class="topbar-right no-print">
+        <button class="btn btn-outline-secondary btn-sm" id="printBtn"><i class="bi bi-printer"></i> Print</button>
+        <a href="repairs.html" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back</a>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- Loading State -->
+      <div id="loadingState" class="text-center py-5">
+        <div class="spinner-border text-primary mb-3"></div>
+        <p class="text-muted">Loading repair record…</p>
+      </div>
+
+      <!-- Error State -->
+      <div id="errorState" class="d-none">
+        <div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>Repair record not found.</div>
+        <a href="repairs.html" class="btn btn-secondary">← Back</a>
+      </div>
+
+      <!-- Content (hidden until data loaded) -->
+      <div id="detailContent" class="d-none">
+
+        <!-- Header Card -->
+        <div class="card mb-4">
+          <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+              <div class="d-flex align-items-center gap-3 flex-wrap">
+                <h1 class="h4 fw-bold mb-0" id="detailJobId">—</h1>
+                <span id="detailStatus"></span>
+              </div>
+              <p class="text-muted mb-0 mt-1" id="detailCreated" style="font-size:12px;"></p>
+            </div>
+            <div class="d-flex gap-2 no-print">
+              <a id="editBtn" href="#" class="btn btn-primary btn-sm"><i class="bi bi-pencil"></i> Edit</a>
+              <button id="deleteBtn" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> Delete</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4">
+
+          <!-- Left Column -->
+          <div class="col-lg-8">
+
+            <!-- Customer Details -->
+            <div class="card mb-4">
+              <div class="card-header"><h2 class="card-title"><i class="bi bi-person me-2"></i>Customer Details</h2></div>
+              <div class="card-body">
+                <div class="info-grid">
+                  <div class="detail-group">
+                    <div class="detail-label">Customer Name</div>
+                    <div class="detail-value" id="dCustomerName">—</div>
+                  </div>
+                  <div class="detail-group">
+                    <div class="detail-label">Phone</div>
+                    <div class="detail-value" id="dPhone">—</div>
+                  </div>
+                  <div class="detail-group">
+                    <div class="detail-label">Alternate Phone</div>
+                    <div class="detail-value" id="dAltPhone">—</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Laptop Details -->
+            <div class="card mb-4">
+              <div class="card-header"><h2 class="card-title"><i class="bi bi-laptop me-2"></i>Laptop Details</h2></div>
+              <div class="card-body">
+                <div class="info-grid">
+                  <div class="detail-group">
+                    <div class="detail-label">Brand</div>
+                    <div class="detail-value" id="dBrand">—</div>
+                  </div>
+                  <div class="detail-group">
+                    <div class="detail-label">Model</div>
+                    <div class="detail-value" id="dModel">—</div>
+                  </div>
+                  <div class="detail-group">
+                    <div class="detail-label">Serial Number</div>
+                    <div class="detail-value" id="dSerial">—</div>
+                  </div>
+                  <div class="detail-group">
+                    <div class="detail-label">Service Tag</div>
+                    <div class="detail-value" id="dServiceTag">—</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Problem & Notes -->
+            <div class="card mb-4">
+              <div class="card-header"><h2 class="card-title"><i class="bi bi-exclamation-triangle me-2"></i>Problem & Notes</h2></div>
+              <div class="card-body">
+                <div class="detail-group mb-3">
+                  <div class="detail-label">Problem Reported</div>
+                  <div class="detail-value" id="dProblem" style="white-space: pre-wrap;">—</div>
+                </div>
+                <div class="detail-group">
+                  <div class="detail-label">Repair Notes</div>
+                  <div class="detail-value" id="dNotes" style="white-space: pre-wrap;">—</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Accessories -->
+            <div class="card mb-4">
+              <div class="card-header"><h2 class="card-title"><i class="bi bi-bag me-2"></i>Accessories</h2></div>
+              <div class="card-body">
+                <div id="dAccessories" class="d-flex flex-wrap gap-2">—</div>
+              </div>
+            </div>
+
+          </div><!-- /left -->
+
+          <!-- Right Column -->
+          <div class="col-lg-4">
+
+            <!-- Repair Info -->
+            <div class="card mb-4">
+              <div class="card-header"><h2 class="card-title"><i class="bi bi-wrench me-2"></i>Repair Info</h2></div>
+              <div class="card-body">
+                <div class="detail-group">
+                  <div class="detail-label">Technician</div>
+                  <div class="detail-value" id="dTechnician">—</div>
+                </div>
+                <hr />
+                <div class="detail-group">
+                  <div class="detail-label">Estimated Amount</div>
+                  <div class="detail-value fs-5 fw-bold text-primary" id="dAmount">—</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dates -->
+            <div class="card mb-4">
+              <div class="card-header"><h2 class="card-title"><i class="bi bi-calendar me-2"></i>Dates</h2></div>
+              <div class="card-body">
+                <div class="detail-group">
+                  <div class="detail-label">Received Date</div>
+                  <div class="detail-value" id="dReceivedDate">—</div>
+                </div>
+                <div class="detail-group">
+                  <div class="detail-label">Received Time</div>
+                  <div class="detail-value" id="dReceivedTime">—</div>
+                </div>
+                <hr />
+                <div class="detail-group">
+                  <div class="detail-label">Delivery Date</div>
+                  <div class="detail-value" id="dDeliveryDate">—</div>
+                </div>
+                <div class="detail-group">
+                  <div class="detail-label">Delivery Time</div>
+                  <div class="detail-value" id="dDeliveryTime">—</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Timeline -->
+            <div class="card mb-4">
+              <div class="card-header"><h2 class="card-title"><i class="bi bi-diagram-3 me-2"></i>Status Timeline</h2></div>
+              <div class="card-body">
+                <ul class="timeline" id="statusTimeline"></ul>
+              </div>
+            </div>
+
+          </div><!-- /right -->
+        </div><!-- /row -->
+      </div><!-- /detailContent -->
+
+      <!-- ═══════ PRINT JOB SHEET ═══════ -->
+      <div class="print-area" id="printArea">
+        <div class="job-sheet">
+          <div class="shop-header">
+            <div class="shop-name" id="pShopName"></div>
+            <div class="shop-sub" id="pShopSub"></div>
+          </div>
+          <div class="js-section">Job Details</div>
+          <div class="js-row"><span class="js-label">Job ID:</span><span id="pJobId"></span></div>
+          <div class="js-row"><span class="js-label">Received Date:</span><span id="pDate"></span></div>
+          <div class="js-row"><span class="js-label">Status:</span><span id="pStatus"></span></div>
+
+          <div class="js-section">Customer Information</div>
+          <div class="js-row"><span class="js-label">Customer Name:</span><span id="pCustomer"></span></div>
+          <div class="js-row"><span class="js-label">Phone:</span><span id="pPhone"></span></div>
+          <div class="js-row"><span class="js-label">Alt. Phone:</span><span id="pAltPhone"></span></div>
+
+          <div class="js-section">Laptop Information</div>
+          <div class="js-row"><span class="js-label">Brand / Model:</span><span id="pBrandModel"></span></div>
+          <div class="js-row"><span class="js-label">Serial Number:</span><span id="pSerial"></span></div>
+          <div class="js-row"><span class="js-label">Service Tag:</span><span id="pTag"></span></div>
+
+          <div class="js-section">Problem</div>
+          <div style="font-size:13px; margin-bottom:8px;" id="pProblem"></div>
+
+          <div class="js-section">Accessories</div>
+          <div style="font-size:13px; margin-bottom:8px;" id="pAccessories"></div>
+
+          <div class="js-section">Financials</div>
+          <div class="js-row"><span class="js-label">Estimated Amount:</span><span id="pAmount"></span></div>
+
+          <div class="signature-row">
+            <div class="sig-line">Customer Signature</div>
+            <div class="sig-line">Technician Signature</div>
+          </div>
+          <p style="font-size:10px; text-align:center; margin-top:12px; color:#888;">
+            Thank you for choosing us! – <span id="pShopFooter"></span>
+          </p>
+        </div>
+      </div>
+
+    </div><!-- /page-body -->
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-trash text-danger me-2"></i>Delete Repair</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete this repair record?</p>
+        <p class="text-muted small">This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-danger" id="confirmDelete">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+  import { initSidebar, setActiveNav, statusBadge, formatDate, formatTime, escapeHtml, showToast, getParam } from './assets/js/ui.js';
+  import { getRepairById, deleteRepair } from './assets/js/db.js';
+  import { SHOP_NAME, SHOP_PHONE, SHOP_ADDRESS } from './assets/js/config.js';
+
+  const STATUSES = ['Received','Diagnosing','Waiting for Parts','Repairing','Ready','Delivered'];
+  let repair = null;
+  let deleteModal;
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    initSidebar();
+    setActiveNav();
+    deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+
+    const id = getParam('id');
+    if (!id) { showError(); return; }
+
+    try {
+      repair = await getRepairById(id);
+      if (!repair) { showError(); return; }
+      renderDetail(repair);
+    } catch (err) {
+      console.error(err);
+      showError();
+    }
+
+    document.getElementById('printBtn').addEventListener('click', () => window.print());
+    document.getElementById('deleteBtn').addEventListener('click', () => deleteModal.show());
+    document.getElementById('confirmDelete').addEventListener('click', async () => {
+      try {
+        await deleteRepair(repair.id);
+        deleteModal.hide();
+        showToast('Repair deleted.', 'success');
+        setTimeout(() => window.location.href = 'repairs.html', 1000);
+      } catch (err) {
+        showToast('Delete failed.', 'error');
+      }
+    });
+  });
+
+  function showError() {
+    document.getElementById('loadingState').classList.add('d-none');
+    document.getElementById('errorState').classList.remove('d-none');
+  }
+
+  function renderDetail(r) {
+    document.getElementById('loadingState').classList.add('d-none');
+    document.getElementById('detailContent').classList.remove('d-none');
+
+    document.getElementById('pageTitle').textContent    = r.job_id;
+    document.getElementById('detailJobId').textContent  = r.job_id;
+    document.getElementById('detailStatus').innerHTML   = statusBadge(r.status);
+    document.getElementById('detailCreated').textContent= `Created: ${formatDate(r.created_at)}`;
+    document.getElementById('editBtn').href              = `edit-repair.html?id=${r.id}`;
+
+    // Customer
+    setText('dCustomerName', r.customer_name);
+    setText('dPhone',        r.phone);
+    setText('dAltPhone',     r.alternate_phone);
+
+    // Laptop
+    setText('dBrand',      r.brand);
+    setText('dModel',      r.model);
+    setText('dSerial',     r.serial_number);
+    setText('dServiceTag', r.service_tag);
+
+    // Problem & Notes
+    setText('dProblem', r.problem);
+    setText('dNotes',   r.repair_notes);
+
+    // Accessories
+    const accEl = document.getElementById('dAccessories');
+    if (r.accessories) {
+      accEl.innerHTML = r.accessories.split(',').map(a =>
+        `<span class="badge bg-light text-dark border">${escapeHtml(a.trim())}</span>`
+      ).join('');
+    } else {
+      accEl.textContent = 'None';
+    }
+
+    // Repair info
+    setText('dTechnician', r.technician);
+    document.getElementById('dAmount').textContent = `₹${parseFloat(r.estimated_amount || 0).toLocaleString('en-IN')}`;
+
+    // Dates
+    document.getElementById('dReceivedDate').textContent = formatDate(r.received_date);
+    document.getElementById('dReceivedTime').textContent = formatTime(r.received_time);
+    document.getElementById('dDeliveryDate').textContent = formatDate(r.delivery_date);
+    document.getElementById('dDeliveryTime').textContent = formatTime(r.delivery_time);
+
+    // Timeline
+    renderTimeline(r.status);
+
+    // Prepare print area
+    preparePrint(r);
+  }
+
+  function setText(id, val) {
+    document.getElementById(id).textContent = val || '—';
+  }
+
+  function renderTimeline(currentStatus) {
+    const currentIdx = STATUSES.indexOf(currentStatus);
+    const ul = document.getElementById('statusTimeline');
+    ul.innerHTML = STATUSES.map((s, i) => {
+      let dotClass = '';
+      if (i < currentIdx) dotClass = 'done';
+      else if (i === currentIdx) dotClass = 'active';
+      return `
+        <li class="timeline-item">
+          <div class="timeline-dot ${dotClass}">
+            <i class="bi ${i < currentIdx ? 'bi-check-lg' : (i === currentIdx ? 'bi-circle-fill' : 'bi-circle')}"></i>
+          </div>
+          <div class="timeline-content">
+            <div class="timeline-title">${escapeHtml(s)}</div>
+            <div class="timeline-desc">${i < currentIdx ? 'Completed' : (i === currentIdx ? 'Current status' : 'Pending')}</div>
+          </div>
+        </li>`;
+    }).join('');
+  }
+
+  function preparePrint(r) {
+    document.getElementById('pShopName').textContent    = SHOP_NAME;
+    document.getElementById('pShopSub').textContent     = `${SHOP_PHONE} | ${SHOP_ADDRESS}`;
+    document.getElementById('pShopFooter').textContent  = SHOP_NAME;
+    document.getElementById('pJobId').textContent       = r.job_id;
+    document.getElementById('pDate').textContent        = `${formatDate(r.received_date)} ${formatTime(r.received_time)}`;
+    document.getElementById('pStatus').textContent      = r.status;
+    document.getElementById('pCustomer').textContent    = r.customer_name;
+    document.getElementById('pPhone').textContent       = r.phone;
+    document.getElementById('pAltPhone').textContent    = r.alternate_phone || '—';
+    document.getElementById('pBrandModel').textContent  = `${r.brand} ${r.model}`;
+    document.getElementById('pSerial').textContent      = r.serial_number || '—';
+    document.getElementById('pTag').textContent         = r.service_tag || '—';
+    document.getElementById('pProblem').textContent     = r.problem;
+    document.getElementById('pAccessories').textContent = r.accessories || 'None';
+    document.getElementById('pAmount').textContent      = `₹${parseFloat(r.estimated_amount || 0).toLocaleString('en-IN')}`;
+  }
+</script>
+</body>
+</html>

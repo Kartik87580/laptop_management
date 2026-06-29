@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Repair – LRMS</title>
+  <meta name="description" content="Edit an existing laptop repair job record." />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+<div class="layout-wrapper">
+
+  <!-- ═══════════ SIDEBAR ═══════════ -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon"><i class="bi bi-laptop"></i></div>
+      <div>
+        <div class="brand-text">LRMS</div>
+        <div class="brand-sub">Repair Management</div>
+      </div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <a href="index.html"      class="nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      <a href="repairs.html"    class="nav-link"><i class="bi bi-list-ul"></i> All Repairs</a>
+      <a href="add-repair.html" class="nav-link"><i class="bi bi-plus-circle"></i> Add Repair</a>
+    </div>
+    <div class="sidebar-footer">&copy; 2026 LRMS &nbsp;·&nbsp; v1.0</div>
+  </nav>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- ═══════════ MAIN ═══════════ -->
+  <div class="main-content">
+    <div class="topbar">
+      <button class="sidebar-toggle" id="sidebarToggle"><i class="bi bi-list"></i></button>
+      <span class="page-title" id="pageTitle">Edit Repair</span>
+      <div class="topbar-right">
+        <a href="repairs.html" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back</a>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <!-- Loading state -->
+      <div id="loadingState" class="text-center py-5">
+        <div class="spinner-border text-primary mb-3"></div>
+        <p class="text-muted">Loading repair record…</p>
+      </div>
+
+      <!-- Error state -->
+      <div id="errorState" class="d-none">
+        <div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>Repair record not found.</div>
+        <a href="repairs.html" class="btn btn-secondary">← Back to Repairs</a>
+      </div>
+
+      <form id="repairForm" novalidate class="d-none">
+        <div class="row g-4">
+
+          <!-- Left Column -->
+          <div class="col-lg-8">
+
+            <!-- Customer Information -->
+            <div class="card mb-4">
+              <div class="card-body">
+                <div class="section-divider"><i class="bi bi-person-fill me-2"></i>Customer Information</div>
+                <div class="row g-3">
+                  <div class="col-md-4">
+                    <label class="form-label">Job ID</label>
+                    <input type="text" class="form-control" id="jobId" readonly />
+                  </div>
+                  <div class="col-md-8">
+                    <label class="form-label" for="customerName">Customer Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="customerName" required />
+                    <div class="invalid-feedback">Customer name is required.</div>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="phone">Phone <span class="text-danger">*</span></label>
+                    <input type="tel" class="form-control" id="phone" required />
+                    <div class="invalid-feedback">Phone is required.</div>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="alternatePhone">Alternate Phone</label>
+                    <input type="tel" class="form-control" id="alternatePhone" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Laptop Information -->
+            <div class="card mb-4">
+              <div class="card-body">
+                <div class="section-divider"><i class="bi bi-laptop me-2"></i>Laptop Information</div>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label" for="brand">Brand <span class="text-danger">*</span></label>
+                    <select class="form-select" id="brand" required>
+                      <option value="">Select brand</option>
+                      <option>Dell</option><option>HP</option><option>Lenovo</option>
+                      <option>Acer</option><option>Asus</option><option>Apple</option>
+                      <option>Samsung</option><option>MSI</option><option>Toshiba</option>
+                      <option>Sony</option><option>Other</option>
+                    </select>
+                    <div class="invalid-feedback">Brand is required.</div>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="model">Model <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="model" required />
+                    <div class="invalid-feedback">Model is required.</div>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="serialNumber">Serial Number</label>
+                    <input type="text" class="form-control" id="serialNumber" />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="serviceTag">Service Tag</label>
+                    <input type="text" class="form-control" id="serviceTag" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Problem -->
+            <div class="card mb-4">
+              <div class="card-body">
+                <div class="section-divider"><i class="bi bi-exclamation-triangle me-2"></i>Problem Description</div>
+                <label class="form-label" for="problem">Problem <span class="text-danger">*</span></label>
+                <textarea class="form-control" id="problem" rows="4" required></textarea>
+                <div class="invalid-feedback">Problem is required.</div>
+              </div>
+            </div>
+
+            <!-- Accessories -->
+            <div class="card mb-4">
+              <div class="card-body">
+                <div class="section-divider"><i class="bi bi-bag me-2"></i>Accessories Received</div>
+                <div class="accessories-grid">
+                  <label class="accessory-check"><input type="checkbox" class="acc-cb" value="Charger" /> Charger</label>
+                  <label class="accessory-check"><input type="checkbox" class="acc-cb" value="Bag" /> Bag</label>
+                  <label class="accessory-check"><input type="checkbox" class="acc-cb" value="Mouse" /> Mouse</label>
+                  <label class="accessory-check"><input type="checkbox" class="acc-cb" value="Battery" /> Battery</label>
+                  <label class="accessory-check"><input type="checkbox" class="acc-cb" value="Other" /> Other</label>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /left -->
+
+          <!-- Right Column -->
+          <div class="col-lg-4">
+
+            <div class="card mb-4">
+              <div class="card-body">
+                <div class="section-divider"><i class="bi bi-wrench me-2"></i>Repair Information</div>
+                <div class="mb-3">
+                  <label class="form-label" for="technician">Technician</label>
+                  <input type="text" class="form-control" id="technician" />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label" for="estimatedAmount">Estimated Amount (₹)</label>
+                  <input type="number" class="form-control" id="estimatedAmount" min="0" step="0.01" />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label" for="repairNotes">Repair Notes</label>
+                  <textarea class="form-control" id="repairNotes" rows="3"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="card mb-4">
+              <div class="card-body">
+                <div class="section-divider"><i class="bi bi-tag me-2"></i>Status</div>
+                <label class="form-label" for="status">Repair Status <span class="text-danger">*</span></label>
+                <select class="form-select" id="status" required>
+                  <option>Received</option>
+                  <option>Diagnosing</option>
+                  <option>Waiting for Parts</option>
+                  <option>Repairing</option>
+                  <option>Ready</option>
+                  <option>Delivered</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="card mb-4">
+              <div class="card-body">
+                <div class="section-divider"><i class="bi bi-calendar me-2"></i>Dates</div>
+                <div class="mb-3">
+                  <label class="form-label" for="receivedDate">Received Date <span class="text-danger">*</span></label>
+                  <input type="date" class="form-control" id="receivedDate" required />
+                  <div class="invalid-feedback">Date is required.</div>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label" for="receivedTime">Received Time</label>
+                  <input type="time" class="form-control" id="receivedTime" />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label" for="deliveryDate">Delivery Date</label>
+                  <input type="date" class="form-control" id="deliveryDate" />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label" for="deliveryTime">Delivery Time</label>
+                  <input type="time" class="form-control" id="deliveryTime" />
+                </div>
+              </div>
+            </div>
+
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-primary" id="saveBtn">
+                <i class="bi bi-floppy"></i> Update Repair
+              </button>
+              <a href="repairs.html" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+
+          </div><!-- /right -->
+        </div><!-- /row -->
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+  import { initSidebar, setActiveNav, showToast, validateForm, getParam } from './assets/js/ui.js';
+  import { getRepairById, updateRepair } from './assets/js/db.js';
+
+  let recordId = null;
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    initSidebar();
+    setActiveNav();
+
+    recordId = getParam('id');
+    if (!recordId) { showError(); return; }
+
+    try {
+      const repair = await getRepairById(recordId);
+      if (!repair) { showError(); return; }
+      populateForm(repair);
+      document.getElementById('pageTitle').textContent = `Edit – ${repair.job_id}`;
+    } catch (err) {
+      console.error(err);
+      showError();
+    }
+
+    document.getElementById('repairForm').addEventListener('submit', handleSubmit);
+  });
+
+  function showError() {
+    document.getElementById('loadingState').classList.add('d-none');
+    document.getElementById('errorState').classList.remove('d-none');
+  }
+
+  function populateForm(r) {
+    document.getElementById('loadingState').classList.add('d-none');
+    document.getElementById('repairForm').classList.remove('d-none');
+
+    document.getElementById('jobId').value           = r.job_id || '';
+    document.getElementById('customerName').value    = r.customer_name || '';
+    document.getElementById('phone').value           = r.phone || '';
+    document.getElementById('alternatePhone').value  = r.alternate_phone || '';
+    document.getElementById('brand').value           = r.brand || '';
+    document.getElementById('model').value           = r.model || '';
+    document.getElementById('serialNumber').value    = r.serial_number || '';
+    document.getElementById('serviceTag').value      = r.service_tag || '';
+    document.getElementById('problem').value         = r.problem || '';
+    document.getElementById('technician').value      = r.technician || '';
+    document.getElementById('estimatedAmount').value = r.estimated_amount || '';
+    document.getElementById('repairNotes').value     = r.repair_notes || '';
+    document.getElementById('status').value          = r.status || 'Received';
+    document.getElementById('receivedDate').value    = r.received_date ? r.received_date.substring(0,10) : '';
+    document.getElementById('receivedTime').value    = r.received_time ? r.received_time.substring(0,5) : '';
+    document.getElementById('deliveryDate').value    = r.delivery_date ? r.delivery_date.substring(0,10) : '';
+    document.getElementById('deliveryTime').value    = r.delivery_time ? r.delivery_time.substring(0,5) : '';
+
+    // Accessories
+    if (r.accessories) {
+      const selected = r.accessories.split(',').map(a => a.trim());
+      document.querySelectorAll('.acc-cb').forEach(cb => {
+        cb.checked = selected.includes(cb.value);
+      });
+    }
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    if (!validateForm(form)) {
+      showToast('Please fill all required fields.', 'error');
+      return;
+    }
+
+    const accessories = Array.from(document.querySelectorAll('.acc-cb:checked'))
+      .map(cb => cb.value).join(',');
+
+    const data = {
+      customer_name:   document.getElementById('customerName').value.trim(),
+      phone:           document.getElementById('phone').value.trim(),
+      alternate_phone: document.getElementById('alternatePhone').value.trim(),
+      brand:           document.getElementById('brand').value,
+      model:           document.getElementById('model').value.trim(),
+      serial_number:   document.getElementById('serialNumber').value.trim(),
+      service_tag:     document.getElementById('serviceTag').value.trim(),
+      problem:         document.getElementById('problem').value.trim(),
+      accessories,
+      technician:      document.getElementById('technician').value.trim(),
+      estimated_amount:document.getElementById('estimatedAmount').value,
+      repair_notes:    document.getElementById('repairNotes').value.trim(),
+      status:          document.getElementById('status').value,
+      received_date:   document.getElementById('receivedDate').value,
+      received_time:   document.getElementById('receivedTime').value,
+      delivery_date:   document.getElementById('deliveryDate').value,
+      delivery_time:   document.getElementById('deliveryTime').value,
+    };
+
+    const saveBtn = document.getElementById('saveBtn');
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating…';
+
+    try {
+      await updateRepair(recordId, data);
+      showToast('Repair updated successfully!', 'success');
+      setTimeout(() => window.location.href = `repair-details.html?id=${recordId}`, 1200);
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to update: ' + err.message, 'error');
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = '<i class="bi bi-floppy"></i> Update Repair';
+    }
+  }
+</script>
+</body>
+</html>
