@@ -28,8 +28,7 @@
  */
 
 // ← Replace this with your actual Neon connection string
-export const NEON_CONNECTION_STRING =
-  'postgresql://neondb_owner:npg_1hBCVGRJ4mPj@ep-orange-smoke-ao3idb7v-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
+export const NEON_CONNECTION_STRING = 'postgresql://neondb_owner:npg_1hBCVGRJ4mPj@ep-orange-smoke-ao3idb7v-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
 
 // ─── Shop Details (shown on printed job sheets) ──────────────
 export const SHOP_NAME = 'My Laptop Repair Shop';
