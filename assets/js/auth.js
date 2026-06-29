@@ -30,6 +30,8 @@ async function query(sql, params = []) {
     throw new Error('Invalid NEON_CONNECTION_STRING in config.js');
   }
 
+  // Neon HTTP SQL API endpoint: replace first subdomain with 'api'
+  // This matches what @neondatabase/serverless does internally.
   const apiHost = host.replace(/^[^.]+/, 'api');
   const endpoint = `https://${apiHost}/sql`;
 
@@ -47,6 +49,7 @@ async function query(sql, params = []) {
     try {
       const err = await response.json();
       msg = err.message || err.error || msg;
+      console.error('[Neon Error]', response.status, err);
     } catch { /* ignore */ }
     throw new Error(msg);
   }

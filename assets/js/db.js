@@ -40,8 +40,8 @@ async function query(sql, params = []) {
     throw new Error('Invalid NEON_CONNECTION_STRING in config.js');
   }
 
-  // Neon's HTTP SQL API is hosted on the API gateway (api.<region>.neon.tech), not the database compute host directly.
-  // We replace the compute endpoint prefix (e.g. ep-...) with 'api' in the hostname.
+  // Neon HTTP SQL API endpoint: replace first subdomain with 'api'
+  // This matches what @neondatabase/serverless does internally.
   const apiHost = host.replace(/^[^.]+/, 'api');
   const endpoint = `https://${apiHost}/sql`;
 
