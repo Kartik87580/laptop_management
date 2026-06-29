@@ -3,7 +3,25 @@
 -- Database: Neon PostgreSQL
 -- ============================================================
 
--- Drop table if exists (useful for fresh setup)
+-- ============================================================
+-- Users table (for authentication)
+-- ============================================================
+DROP TABLE IF EXISTS users;
+
+CREATE TABLE users (
+    id           SERIAL PRIMARY KEY,
+    username     VARCHAR(50) UNIQUE NOT NULL,
+    email        VARCHAR(150) UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,           -- SHA-256 hex string
+    created_at   TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_users_email    ON users (email);
+CREATE INDEX idx_users_username ON users (username);
+
+-- ============================================================
+-- Repairs table
+-- ============================================================
 DROP TABLE IF EXISTS repairs;
 
 -- Create the repairs table
