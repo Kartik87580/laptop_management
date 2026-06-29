@@ -40,13 +40,15 @@ async function query(sql, params = []) {
     throw new Error('Invalid NEON_CONNECTION_STRING in config.js');
   }
 
-  const endpoint = `https://${host}/sql`;
+  // Neon's HTTP SQL API is hosted on the API gateway (api.<region>.neon.tech), not the database compute host directly.
+  // We replace the compute endpoint prefix (e.g. ep-...) with 'api' in the hostname.
+  const apiHost = host.replace(/^[^.]+/, 'api');
+  const endpoint = `https://${apiHost}/sql`;
 
   const response = await fetch(endpoint, {
     method: 'POST',
     headers: {
       'Content-Type':  'application/json',
-      'Authorization': `Bearer ${NEON_CONNECTION_STRING}`,
       'Neon-Connection-String': NEON_CONNECTION_STRING,
     },
     body: JSON.stringify({ query: sql, params }),
