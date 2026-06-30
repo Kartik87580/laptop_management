@@ -132,7 +132,8 @@ export async function getDashboardStats() {
       COUNT(*) FILTER (WHERE status = 'Waiting for Parts')  AS waiting_for_parts,
       COUNT(*) FILTER (WHERE status = 'Repairing')          AS repairing,
       COUNT(*) FILTER (WHERE status = 'Ready')              AS ready,
-      COUNT(*) FILTER (WHERE status = 'Delivered')          AS delivered
+      COUNT(*) FILTER (WHERE status = 'Delivered')          AS delivered,
+      COUNT(*) FILTER (WHERE status = 'Cancel')             AS cancelled
     FROM repairs
   `);
   const r = result.rows[0];
@@ -144,6 +145,7 @@ export async function getDashboardStats() {
     repairing:       parseInt(r.repairing, 10),
     ready:           parseInt(r.ready, 10),
     delivered:       parseInt(r.delivered, 10),
+    cancelled:       parseInt(r.cancelled, 10),
   };
 }
 

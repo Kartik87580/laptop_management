@@ -142,6 +142,7 @@
       { label: 'Repairing',        value: s.repairing,       icon: 'bi-wrench',          color: 'purple' },
       { label: 'Ready',            value: s.ready,           icon: 'bi-check2-circle',   color: 'green'  },
       { label: 'Delivered',        value: s.delivered,       icon: 'bi-box-seam',        color: 'cyan'   },
+      { label: 'Cancelled',        value: s.cancelled || 0,  icon: 'bi-x-circle',        color: 'red'    },
     ];
 
     document.getElementById('statsRow').innerHTML = cards.map(c => `

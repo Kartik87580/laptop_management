@@ -77,6 +77,7 @@ const STATUS_CLASS_MAP = {
   'Repairing':       'badge-repairing',
   'Ready':           'badge-ready',
   'Delivered':       'badge-delivered',
+  'Cancel':          'badge-cancel',
 };
 
 /**
